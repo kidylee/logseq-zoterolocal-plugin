@@ -4,7 +4,7 @@ export const parseHtml = (htmlString: string) => {
   const parser = new DOMParser()
   const doc = parser.parseFromString(htmlString, 'text/html')
   const zotNote = doc.querySelector('div')
-  console.log("doc", zotNote)
+  console.log('doc', zotNote)
   const result: IBatchBlock[] = []
 
   if (!zotNote) {
@@ -32,13 +32,15 @@ export const parseHtml = (htmlString: string) => {
 
       // process note content
       const pText = Array.from(element.childNodes)
-        .filter(n => n.nodeType === Node.TEXT_NODE)
-        .map(n => n.textContent)
-        .join("\n\r");
+        .filter((n) => n.nodeType === Node.TEXT_NODE)
+        .map((n) => n.textContent?.trim())
+        .join('\n\r').trim()
 
       root.children!.push({
         content: content.join(' '),
-        children: [{ content: `#+BEGIN_QUOTE\n\r${pText}\n\r#+END_QUOTE` }],
+        children: pText
+          ? [{ content: `#+BEGIN_QUOTE\n\r${pText}\n\r#+END_QUOTE` }]
+          : [],
       })
     }
   }
@@ -61,7 +63,10 @@ const processZoteroNote = (spanElement: Element): string => {
     case 'underline':
       return `${spanElement.textContent || ''} ${createZoteroLink(annotationData!)}`
     case 'citation':
-      return createZoteroCitationLink(citationData!, spanElement.textContent || '')
+      return createZoteroCitationLink(
+        citationData!,
+        spanElement.textContent || '',
+      )
     default:
       return ''
   }
@@ -72,7 +77,9 @@ const createZoteroCitationLink = (citationData: string, content: string) => {
   const citationObj = JSON.parse(decoded)
   const itemKey = citationObj.citationItems[0].uris[0].split('/').pop()
   const locator = citationObj.citationItems[0].locator
-  const link =  locator ? `zotero://open-pdf/library/items/${itemKey}?page=${locator}`: `zotero://select/library/items/${itemKey}`
+  const link = locator
+    ? `zotero://open-pdf/library/items/${itemKey}?page=${locator}`
+    : `zotero://select/library/items/${itemKey}`
 
   return `[${content}](${link})`
 }
@@ -88,6 +95,6 @@ const createZoteroLink = (annotationData: string) => {
   const position = pageLabel ? `page=${pageLabel}` : `sel=${positionValue}`
 
   const annotationKey = annotationObj.annotationKey
-  const link =  `zotero://open-pdf/library/items/${itemId}?${position}&annotation=${annotationKey}`
+  const link = `zotero://open-pdf/library/items/${itemId}?${position}&annotation=${annotationKey}`
   return `[🔗](${link})`
 }
