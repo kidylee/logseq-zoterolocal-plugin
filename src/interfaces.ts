@@ -234,6 +234,9 @@ export type AttachmentItem =
   | ({
       linkMode: 'imported_file'
     } & FileItem)
+  | ({
+      linkMode: 'imported_url'
+    } & FileItem)
 
 export interface CollectionItem {
   key: string
